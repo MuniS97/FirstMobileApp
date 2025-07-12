@@ -1,12 +1,17 @@
-import { CreateUserParams, SignInParams } from "@/type"
-import { Account, Avatars, Client, Databases, ID, Query } from "react-native-appwrite"
+import { CreateUserParams, GetMenuParams, SignInParams } from "@/type"
+import { Account, Avatars, Client, Databases, ID, Query, Storage } from "react-native-appwrite"
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!,
     platform: "com.mst.firstmobileapp",
     projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!,
     databaseId: "686fadd70019bbe100e1",
+    bucketId: "68721392003b864983b3",
     userCollectionId: "686fae09001edeecb2dd",
+    categoriesCollectionId: "687122150038423da486",
+    menuCollectionId: "6871238f0031a88279fd",
+    customizationsCollectionId: "687217c1003c6e369e2c",
+    menuCustomizationsCollectionId: "68721278000f2f45e199"
 }
 
 export const client = new Client()
@@ -18,6 +23,7 @@ client
 
 export const account = new Account(client)
 export const databases = new Databases(client)
+export const storage = new Storage(client)
 const avatars = new Avatars(client)
 
 export const createUser = async ({ email, password, name }: CreateUserParams) => {
@@ -66,6 +72,38 @@ export const getCurrentUser = async () => {
         return currentUser.documents[0]
     } catch (error) {
         console.error(error);
+        throw new Error(error as string)
+    }
+}
+
+export const getMenu = async ({ category, query }: GetMenuParams) => {
+    try {
+        const queries: string[] = []
+
+        if (category) queries.push(Query.equal("categories", category))
+        if (query) queries.push(Query.search("name", query))
+
+        const menus = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.menuCollectionId,
+            queries
+        )
+
+        return menus.documents
+    } catch (error) {
+        throw new Error(error as string)
+    }
+}
+
+export const getCategories = async () => {
+    try {
+        const categories = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.categoriesCollectionId
+        )
+
+        return categories.documents
+    } catch (error) {
         throw new Error(error as string)
     }
 }
