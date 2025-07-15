@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/appwrite";
+import { getCurrentUser, signOut } from "@/lib/appwrite";
 import { User } from "@/type";
 import { create } from "zustand";
 
@@ -31,8 +31,11 @@ const useAuthStore = create<AuthState>((set) => ({
 
             if (user) set({ isAuthenticated: true, user: user as User })
             else set({ isAuthenticated: false, user: null })
-        } catch (error) {
+        } catch (error: any) {
             console.log("fetchAuthenticatedUser error", error);
+            if (error.message.includes("Invalid token: Expired")) {
+                await signOut();
+            }
             set({ isAuthenticated: false, user: null })
         } finally {
             set({ isLoading: false })

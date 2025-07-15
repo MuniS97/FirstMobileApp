@@ -1,5 +1,6 @@
-import { CreateUserParams, GetMenuParams, SignInParams } from "@/type"
-import { Account, Avatars, Client, Databases, ID, Query, Storage } from "react-native-appwrite"
+import { CreateUserParams, GetMenuParams, SignInParams } from "@/type";
+import * as SecureStore from 'expo-secure-store';
+import { Account, Avatars, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!,
@@ -48,13 +49,32 @@ export const createUser = async ({ email, password, name }: CreateUserParams) =>
 }
 
 export const signIn = async ({ email, password }: SignInParams) => {
-    try {
-        const session = await account.createEmailPasswordSession(email, password);
-    } catch (error) {
-        throw new Error(error as string)
-    }
-}
+    await account.createEmailPasswordSession(email, password);
 
+    const { jwt } = await account.createJWT();
+
+    client.setJWT(jwt);
+
+    await SecureStore.setItemAsync("appwrite_jwt", jwt);
+};
+
+export const restoreAuth = async () => {
+    const jwt = await SecureStore.getItemAsync("appwrite_jwt");
+    if (jwt) {
+        client.setJWT(jwt);
+    }
+};
+
+export const signOut = async () => {
+    try {
+        await account.deleteSession("current");
+    } catch (error: any) {
+        if (error?.code !== 401) throw error;
+    } finally {
+        client.setJWT("");
+        await SecureStore.deleteItemAsync("appwrite_jwt");
+    }
+};
 export const getCurrentUser = async () => {
     try {
         const currentAccount = await account.get()
@@ -71,7 +91,7 @@ export const getCurrentUser = async () => {
 
         return currentUser.documents[0]
     } catch (error) {
-        console.error(error);
+        console.error("GetCurrentUser Error", error);
         throw new Error(error as string)
     }
 }
