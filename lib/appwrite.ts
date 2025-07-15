@@ -96,6 +96,20 @@ export const getCurrentUser = async () => {
     }
 }
 
+export const UpdateCurrentUser = async (data: any, documentId: string) => {
+    try {
+        await databases.updateDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.userCollectionId,
+            documentId,
+            data
+        )
+    } catch (error) {
+        console.error("Error updating user data:", error);
+        throw new Error(error as string)
+    }
+}
+
 export const getMenu = async ({ category, query }: GetMenuParams) => {
     try {
         const queries: string[] = []

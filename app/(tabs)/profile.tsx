@@ -62,6 +62,7 @@ const Profile = () => {
 
                 <View className='flex-center flex-col gap-5'>
                     <TouchableOpacity
+                        onPress={() => router.push('/edit-profile')}
                         className='custom-btn bg-primary/10 border-primary border'
                     >
                         <Text className='paragraph-bold text-primary'>Edit Profile</Text>
