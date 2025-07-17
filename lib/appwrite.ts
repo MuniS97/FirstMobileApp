@@ -1,4 +1,4 @@
-import { CreateUserParams, GetMenuParams, SignInParams } from "@/type";
+import { CreateUserParams, GetMenuItemProps, GetMenuParams, SignInParams } from "@/type";
 import * as SecureStore from 'expo-secure-store';
 import { Account, Avatars, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
 
@@ -125,6 +125,22 @@ export const getMenu = async ({ category, query }: GetMenuParams) => {
 
         return menus.documents
     } catch (error) {
+        console.error("Error getting menu:", error);
+        throw new Error(error as string)
+    }
+}
+
+export const getMenuItemById = async ({ id }: GetMenuItemProps) => {
+    try {
+        const menuItem = await databases.getDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.menuCollectionId,
+            id
+        )
+
+        return menuItem
+    } catch (error) {
+        console.error("Error getting menu item:", error);
         throw new Error(error as string)
     }
 }
@@ -137,6 +153,19 @@ export const getCategories = async () => {
         )
 
         return categories.documents
+    } catch (error) {
+        throw new Error(error as string)
+    }
+}
+
+export const getCustomizations = async () => {
+    try {
+        const customizations = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.customizationsCollectionId
+        )
+
+        return customizations.documents
     } catch (error) {
         throw new Error(error as string)
     }

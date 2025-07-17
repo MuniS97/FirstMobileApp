@@ -8,7 +8,7 @@ import { Category, MenuItem } from '@/type'
 import cn from "clsx"
 import { useLocalSearchParams } from 'expo-router'
 import { useEffect } from 'react'
-import { FlatList, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Search = () => {
@@ -23,6 +23,8 @@ const Search = () => {
     useEffect(() => {
         refetch({ category, query, limit: 6 })
     }, [query, category])
+
+    if (loading) return <ActivityIndicator className='mt-20' />
 
     return (
         <SafeAreaView
