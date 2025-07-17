@@ -109,3 +109,9 @@ interface GetMenuParams {
 interface GetMenuItemProps {
     id: string;
 }
+
+interface ProductCustomizationsProps {
+    customizations: { customizations: any }[];
+    style?: string;
+    title: string
+}

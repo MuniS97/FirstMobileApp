@@ -1,10 +1,12 @@
 import CustomHeader from '@/components/CustomHeader';
+import ProductCustomizations from '@/components/ProductCustomizations';
 import { images } from '@/constants';
 import { appwriteConfig, getCustomizations, getMenuItemById } from '@/lib/appwrite';
 import useAppwrite from '@/lib/useAppwrite';
+import { CartCustomization } from '@/type';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, Image, Text, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProductPage = () => {
@@ -22,13 +24,12 @@ const ProductPage = () => {
     if (loading) return <ActivityIndicator className='mt-20' />
     if (!data) return <Text className='p-5'>Product not found.</Text>;
 
-    console.log(JSON.stringify(data, null, 2));
-    
-
+    const toppings = data.menuCustomizations.filter((menuCustomization: { customizations: CartCustomization }) => menuCustomization.customizations.type === 'topping');
+    const sides = data.menuCustomizations.filter((menuCustomization: { customizations: CartCustomization }) => menuCustomization.customizations.type === 'side');
     const imageUrl = `${data?.image_url}?project=${appwriteConfig.projectId}`
     return (
-        <SafeAreaView className='bg-white h-full'>
-            <View className='pb-28 px-5 pt-5'>
+        <SafeAreaView className='bg-white h-full relative'>
+            <ScrollView className='pb-28 px-5 pt-5'>
                 <CustomHeader />
                 <View className='flex-between flex-row'>
                     <View className='flex-start gap-2'>
@@ -86,7 +87,21 @@ const ProductPage = () => {
                     </View>
                 </View>
                 <Text className='paragraph-medium text-gray-200 mt-8'>{data.description}</Text>
-            </View>
+
+                <ProductCustomizations title='Toppings' customizations={toppings} />
+
+                <ProductCustomizations title='Sides' customizations={sides} />
+
+            </ScrollView>
+
+            <TouchableOpacity className='fixed bottom-0 mx-5 bg-primary py-3.5 px-7 rounded-3xl flex-center flex-row gap-3 mt-10'>
+                <Image
+                    source={images.bag}
+                    className='size-5'
+                    resizeMode='contain'
+                />
+                <Text className='paragraph-bold text-white'>Add to Cart</Text>
+            </TouchableOpacity>
         </SafeAreaView>
     );
 };
