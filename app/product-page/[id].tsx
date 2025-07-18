@@ -1,8 +1,9 @@
 import CustomHeader from '@/components/CustomHeader';
 import ProductCustomizations from '@/components/ProductCustomizations';
 import { images } from '@/constants';
-import { appwriteConfig, getCustomizations, getMenuItemById } from '@/lib/appwrite';
+import { appwriteConfig, getMenuItemById } from '@/lib/appwrite';
 import useAppwrite from '@/lib/useAppwrite';
+import { useCartStore } from '@/store/cart.store';
 import { CartCustomization } from '@/type';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
@@ -11,11 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProductPage = () => {
     const { id } = useLocalSearchParams<{ id: string }>();
+    const { items, addItem, increaseQty, decreaseQty, removeItem } = useCartStore();
     const { data, loading, refetch } = useAppwrite({
         fn: getMenuItemById,
         params: { id }
     })
-    const { data: customizations } = useAppwrite({ fn: getCustomizations })
 
     useEffect(() => {
         refetch({ id });
@@ -24,9 +25,15 @@ const ProductPage = () => {
     if (loading) return <ActivityIndicator className='mt-20' />
     if (!data) return <Text className='p-5'>Product not found.</Text>;
 
+    const imageUrl = `${data?.image_url}?project=${appwriteConfig.projectId}`
+
     const toppings = data.menuCustomizations.filter((menuCustomization: { customizations: CartCustomization }) => menuCustomization.customizations.type === 'topping');
     const sides = data.menuCustomizations.filter((menuCustomization: { customizations: CartCustomization }) => menuCustomization.customizations.type === 'side');
-    const imageUrl = `${data?.image_url}?project=${appwriteConfig.projectId}`
+
+    const isItemInCart: any = items.filter((item) => item.id === id)[0];
+
+    console.log(isItemInCart);
+
     return (
         <SafeAreaView className='bg-white h-full relative'>
             <ScrollView className='pb-28 px-5 pt-5'>
@@ -94,14 +101,47 @@ const ProductPage = () => {
 
             </ScrollView>
 
-            <TouchableOpacity className='fixed bottom-0 mx-5 bg-primary py-3.5 px-7 rounded-3xl flex-center flex-row gap-3 mt-10'>
-                <Image
-                    source={images.bag}
-                    className='size-5'
-                    resizeMode='contain'
-                />
-                <Text className='paragraph-bold text-white'>Add to Cart</Text>
-            </TouchableOpacity>
+            {Boolean(isItemInCart) ? (
+                <View className="flex-center flex-row gap-x-4 mt-2 bg-primary/10 py-3 px-5 rounded-3xl mx-5">
+                    <TouchableOpacity
+                        onPress={() => decreaseQty(isItemInCart.id, isItemInCart.customizations!)}
+                        className="cart-item__actions w-14 h-14"
+                    >
+                        <Image
+                            source={images.minus}
+                            className="size-1/3"
+                            resizeMode="contain"
+                            tintColor={"#FF9C01"}
+                        />
+                    </TouchableOpacity>
+
+                    <Text className="h3-bold font-bold text-dark-100">{isItemInCart.quantity}</Text>
+
+                    <TouchableOpacity
+                        onPress={() => increaseQty(isItemInCart.id, isItemInCart.customizations!)}
+                        className="cart-item__actions w-14 h-14"
+                    >
+                        <Image
+                            source={images.plus}
+                            className="size-1/3"
+                            resizeMode="contain"
+                            tintColor={"#FF9C01"}
+                        />
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <TouchableOpacity
+                    className='fixed bottom-0 mx-5 bg-primary py-3.5 px-7 rounded-3xl flex-center flex-row gap-3 mt-10'
+                    onPress={() => addItem({ id: data.$id, name: data.name, image_url: imageUrl, price: data.price, customizations: [] })}
+                >
+                    <Image
+                        source={images.bag}
+                        className='size-5'
+                        resizeMode='contain'
+                    />
+                    <Text className='paragraph-bold text-white'>Add to Cart</Text>
+                </TouchableOpacity>
+            )}
         </SafeAreaView>
     );
 };
